@@ -50,9 +50,29 @@ def create_api_resource(resource: schemas.APIResourceCreate, db: Session = Depen
 
 
 @app.get("/api/", response_model=list[schemas.APIResourceOut])
-def list_api_resources(db: Session = Depends(get_db)):
-    """Return all API resources."""
-    return db.query(database.APIResource).all()
+def list_api_resources(
+    search: str | None = None,
+    skip: int = 0,
+    limit: int = 20,
+    db: Session = Depends(get_db),
+):
+    """
+    Return API resources with optional search and pagination.
+
+    - **search**: filter by name, description, or URL (case-insensitive)
+    - **skip**: number of records to skip (for pagination)
+    - **limit**: max records to return (default 20, max 100)
+    """
+    limit = min(limit, 100)
+    query = db.query(database.APIResource)
+    if search:
+        term = f"%{search}%"
+        query = query.filter(
+            database.APIResource.name.ilike(term)
+            | database.APIResource.description.ilike(term)
+            | database.APIResource.url.ilike(term)
+        )
+    return query.order_by(database.APIResource.id).offset(skip).limit(limit).all()
 
 
 @app.get("/api/{resource_id}", response_model=schemas.APIResourceOut)
