@@ -13,6 +13,10 @@ A **REST API** for cataloguing and managing API resources — built with **FastA
 >
 > ⚠️ Free tier — may take 30–60 seconds to wake up on first request.
 
+## 📸 Screenshots
+
+![Swagger UI](screenshots/swagger-ui.png)
+
 ## ✨ Features
 
 - **Full CRUD** — Create, Read, Update, Delete API resources
