@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>API Library Manager</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0e1117; color: #e2e8f0; min-height: 100vh; padding: 2rem 1rem; }
+    .container { max-width: 960px; margin: 0 auto; }
+    h1 { font-size: 1.8rem; font-weight: 700; color: #fff; }
+    .subtitle { color: #888; margin-top: 0.4rem; margin-bottom: 2rem; font-size: 0.95rem; }
+    .card { background: #1a1f2e; border: 1px solid #2d3748; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; }
+    .card h2 { font-size: 0.85rem; font-weight: 600; color: #a0aec0; margin-bottom: 1.2rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    .row { display: flex; gap: 0.8rem; flex-wrap: wrap; }
+    .field { flex: 1; min-width: 180px; }
+    .field.wide { flex: 2; }
+    label { display: block; font-size: 0.78rem; color: #718096; margin-bottom: 0.3rem; text-transform: uppercase; letter-spacing: 0.04em; }
+    input, select, textarea {
+      width: 100%; padding: 0.6rem 0.8rem; background: #0e1117; border: 1px solid #2d3748;
+      border-radius: 8px; color: #e2e8f0; font-size: 0.9rem; font-family: inherit;
+    }
+    input:focus, select:focus { outline: none; border-color: #6c63ff; }
+    textarea { resize: vertical; min-height: 70px; }
+    .btn { padding: 0.65rem 1.4rem; border: none; border-radius: 8px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+    .btn-primary { background: #6c63ff; color: #fff; }
+    .btn-primary:hover { background: #5a52e0; }
+    .btn-danger  { background: rgba(255,101,132,0.15); color: #ff6584; border: 1px solid #ff6584; }
+    .btn-danger:hover { background: rgba(255,101,132,0.3); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .search-row { display: flex; gap: 0.8rem; margin-bottom: 1rem; }
+    .search-row input { flex: 1; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+    th { text-align: left; padding: 0.6rem 0.8rem; color: #718096; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; border-bottom: 1px solid #2d3748; }
+    td { padding: 0.75rem 0.8rem; border-bottom: 1px solid #1e2535; vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #1e2535; }
+    .tag { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 99px; font-size: 0.75rem; font-weight: 600; }
+    .tag-GET    { background: rgba(0,201,167,0.15); color: #00c9a7; }
+    .tag-POST   { background: rgba(108,99,255,0.15); color: #6c63ff; }
+    .tag-PUT    { background: rgba(255,217,61,0.15);  color: #ffd93d; }
+    .tag-DELETE { background: rgba(255,101,132,0.15); color: #ff6584; }
+    .tag-OTHER  { background: rgba(160,174,192,0.15); color: #a0aec0; }
+    .url-cell { font-family: monospace; font-size: 0.82rem; color: #a0aec0; word-break: break-all; }
+    .empty { text-align: center; padding: 2rem; color: #555; }
+    .toast { position: fixed; bottom: 1.5rem; right: 1.5rem; background: #1a1f2e; border: 1px solid #2d3748; border-radius: 10px; padding: 0.8rem 1.2rem; font-size: 0.88rem; opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 99; }
+    .toast.show { opacity: 1; }
+    .toast.success { border-color: #00c9a7; color: #00c9a7; }
+    .toast.error   { border-color: #ff6584; color: #ff6584; }
+    .api-link { font-size: 0.8rem; color: #555; margin-top: 1rem; text-align: center; }
+    .api-link a { color: #6c63ff; text-decoration: none; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>📚 API Library Manager</h1>
+  <p class="subtitle">Save, search, and manage your REST API resource catalogue.</p>
+
+  <!-- Add resource -->
+  <div class="card">
+    <h2>Add Resource</h2>
+    <div class="row" style="margin-bottom:0.8rem">
+      <div class="field wide"><label>Name</label><input id="f-name" placeholder="OpenWeather Current Weather"/></div>
+      <div class="field">
+        <label>Method</label>
+        <select id="f-method">
+          <option>GET</option><option>POST</option><option>PUT</option>
+          <option>PATCH</option><option>DELETE</option>
+        </select>
+      </div>
+    </div>
+    <div class="row" style="margin-bottom:0.8rem">
+      <div class="field wide"><label>URL</label><input id="f-url" placeholder="https://api.openweathermap.org/data/2.5/weather"/></div>
+      <div class="field"><label>Auth Type</label>
+        <select id="f-auth">
+          <option value="">None</option><option>API Key</option><option>Bearer Token</option>
+          <option>Basic Auth</option><option>OAuth2</option>
+        </select>
+      </div>
+    </div>
+    <div class="row">
+      <div class="field wide"><label>Description</label><input id="f-desc" placeholder="Get current weather by city name or coordinates"/></div>
+      <div style="display:flex;align-items:flex-end;padding-bottom:0">
+        <button class="btn btn-primary" onclick="addResource()">Add Resource</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- List resources -->
+  <div class="card">
+    <h2>Resources</h2>
+    <div class="search-row">
+      <input id="search-input" placeholder="Search by name, URL, or description…" oninput="searchResources()"/>
+    </div>
+    <div id="table-wrap">
+      <table>
+        <thead><tr><th>Method</th><th>Name</th><th>URL</th><th>Auth</th><th>Description</th><th></th></tr></thead>
+        <tbody id="resources-body"><tr><td colspan="6" class="empty">Loading…</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+  <p class="api-link">REST API → <a href="/docs" target="_blank">/docs</a></p>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  let searchTimer;
+
+  async function loadResources(search = '') {
+    const url = '/api/' + (search ? `?search=${encodeURIComponent(search)}` : '');
+    try {
+      const res = await fetch(url);
+      const data = await res.json();
+      renderTable(data);
+    } catch(e) { showToast('Failed to load resources', 'error'); }
+  }
+
+  function renderTable(items) {
+    const tbody = document.getElementById('resources-body');
+    if (!items.length) {
+      tbody.innerHTML = '<tr><td colspan="6" class="empty">No resources found.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = items.map(r => {
+      const method = r.method || 'GET';
+      const tagClass = ['GET','POST','PUT','DELETE'].includes(method) ? `tag-${method}` : 'tag-OTHER';
+      return `<tr>
+        <td><span class="tag ${tagClass}">${method}</span></td>
+        <td>${esc(r.name)}</td>
+        <td class="url-cell">${esc(r.url)}</td>
+        <td>${esc(r.auth_type || '—')}</td>
+        <td>${esc(r.description || '—')}</td>
+        <td><button class="btn btn-danger" onclick="deleteResource(${r.id})">Delete</button></td>
+      </tr>`;
+    }).join('');
+  }
+
+  async function addResource() {
+    const name   = document.getElementById('f-name').value.trim();
+    const url    = document.getElementById('f-url').value.trim();
+    const method = document.getElementById('f-method').value;
+    const auth   = document.getElementById('f-auth').value;
+    const desc   = document.getElementById('f-desc').value.trim();
+
+    if (!name || !url) { showToast('Name and URL are required', 'error'); return; }
+
+    try {
+      const res = await fetch('/api/', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ name, url, method, auth_type: auth || null, description: desc || null }),
+      });
+      if (res.status === 409) { showToast('A resource with this URL already exists', 'error'); return; }
+      if (!res.ok) throw new Error();
+      ['f-name','f-url','f-desc'].forEach(id => document.getElementById(id).value = '');
+      showToast('Resource added', 'success');
+      loadResources(document.getElementById('search-input').value);
+    } catch(e) { showToast('Failed to add resource', 'error'); }
+  }
+
+  async function deleteResource(id) {
+    if (!confirm('Delete this resource?')) return;
+    try {
+      await fetch(`/api/${id}`, { method: 'DELETE' });
+      showToast('Deleted', 'success');
+      loadResources(document.getElementById('search-input').value);
+    } catch(e) { showToast('Failed to delete', 'error'); }
+  }
+
+  function searchResources() {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => loadResources(document.getElementById('search-input').value), 300);
+  }
+
+  function showToast(msg, type) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = `toast ${type} show`;
+    setTimeout(() => t.className = 'toast', 2500);
+  }
+
+  function esc(s) {
+    return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  loadResources();
+</script>
+</body>
+</html>

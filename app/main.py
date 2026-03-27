@@ -1,4 +1,6 @@
+import os
 from fastapi import FastAPI, Depends, HTTPException
+from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
 from . import database, schemas
 
@@ -19,19 +21,11 @@ def get_db():
         db.close()
 
 
-@app.get("/")
+@app.get("/", response_class=HTMLResponse)
 def root():
-    return {
-        "message": "Welcome to the API Library Manager!",
-        "docs": "/docs",
-        "endpoints": {
-            "list": "GET /api/",
-            "create": "POST /api/",
-            "get": "GET /api/{id}",
-            "update": "PUT /api/{id}",
-            "delete": "DELETE /api/{id}",
-        },
-    }
+    html_path = os.path.join(os.path.dirname(__file__), "static", "index.html")
+    with open(html_path) as f:
+        return f.read()
 
 
 @app.post("/api/", response_model=schemas.APIResourceOut, status_code=201)
